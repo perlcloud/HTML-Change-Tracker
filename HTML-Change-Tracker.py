@@ -38,7 +38,6 @@ def get_html():
     get_html_time_end = time.time()
     global get_html_time
     get_html_time = get_html_time_start - get_html_time_end
-    # get_html_time = timedelta(seconds=get_html_time).total_seconds()
 
 def get_old_html():
     get_html()
