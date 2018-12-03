@@ -5,8 +5,23 @@ import urllib.request
 from datetime import  datetime
 from bs4 import BeautifulSoup
 
-target_name = 'Denim Overalls'
-target_name = target_name.replace(' ','_')
+def create_log():
+    # Create log and file folder
+    target_name = 'Denim Overalls'.replace(' ','_')
+    script_path = os.path.dirname(os.path.realpath(__file__))
+    global log_path
+    log_path = script_path + '\\' + target_name
+    if not os.path.exists(log_path):
+        os.makedirs(log_path)
+
+    # Start log
+    log_file_name = 'log_' + str(target_name) + '.txt'
+    log_file_path = log_path+'\\'+log_file_name
+    if not os.path.isfile(log_file_path):
+        global log
+        log = open(log_file_path,'w+')
+        log.close
+    log = open(log_file_path,'a')
 
 def get_html():
     user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36'
@@ -16,21 +31,20 @@ def get_html():
     request=urllib.request.Request(url,None,headers)
     response = urllib.request.urlopen(request)
     global html_data
-<<<<<<< HEAD
-    html_data = BeautifulSoup.prettify(response.read())
-=======
     html_data = BeautifulSoup(response.read())
->>>>>>> 95ef8baf716f8ed0342791dabb95b60f291dd7b3
 
-def get_old_size_list():
+def get_old_html():
     get_html()
-    global old_size_list
-    old_size_list = str(html_data.find_all("div", class_="size-list"))
+    global old_html_target
+    old_html_target = str(html_data.find_all("div", class_="size-list"))
+    html_state_file_name = log_path + '\\' + 'html_state_' + str(datetime.now()).replace(':','-') + '.html'
+    html_state_file = open(html_state_file_name,'w+')
+    html_state_file.write(str(html_data))
 
-def get_new_size_list():
+def get_new_html():
     get_html()
-    global new_size_list
-    new_size_list = str(html_data.find_all('div', class_='size-list'))
+    global new_html_target
+    new_html_target = str(html_data.find_all('div', class_='size-list'))
 
 def send_email(subject, body):
     import smtplib
@@ -62,38 +76,31 @@ def send_email(subject, body):
 def sleep_time():
     return random.randint(60,181)
 
-
-# Keep track of time and loops in log
+# Start log
+create_log()
 start_time = datetime.now()
 loop_count = 0
-my_path = os.path.dirname(os.path.realpath(__file__))
-log_file_name = 'log_' + str(datetime.now()).replace(':','-') + '.txt'
-log_file = my_path+'\\'+log_file_name
-print(log_file)
-log = open(log_file,'w+')
 log.write('Start Time: ' + str(start_time) + '\n')
 log.close
 
-# Start of script 
-get_old_size_list()
+# Get current html state
+get_old_html()
 size_list_change = True
 
 while (size_list_change == True):
     loop_count = loop_count + 1
-    get_new_size_list()
+    get_new_html()
 
-    if(str(old_size_list) == str(new_size_list)):
-        print(str(loop_count) + '   ' + str(datetime.now()) + '  Inventory Unchanged')
-        log = open(log_file,'a')
-        log.write(str(loop_count) + '   ' + str(datetime.now()) + '  Inventory Unchanged\n')
+    if(str(old_html_target) == str(new_html_target)):
+        print(str(loop_count) + '   ' + str(datetime.now()) + '  HTML Target Unchanged')
+        log.write(str(loop_count) + '   ' + str(datetime.now()) + '  HTML Target Unchanged\n')
         time.sleep(sleep_time())
     else:
-        send_email('Inventory Changed!!?', str(url) + ' Loop: ' + str(loop_count))
-        log = open(log_file,'a')
-        log.write(str(loop_count) + '   ' + str(datetime.now()) + '  Inventory Changed\n')
+        send_email('HTML Target Changed!!?', str(url) + ' Loop: ' + str(loop_count))
+        log.write(str(loop_count) + '   ' + str(datetime.now()) + '  HTML Target Changed\n')
         end_time = datetime.now()
         log.write('End Time: ' + str(end_time) + '\n')
         log.close
-        print(str(loop_count) + '   ' + str(datetime.now()) + '  Inventory Changed')
-        get_old_size_list() # Start again
+        print(str(loop_count) + '   ' + str(datetime.now()) + '  HTML Target Changed')
+        get_old_html() # Start again
 
