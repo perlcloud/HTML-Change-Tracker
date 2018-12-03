@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 
 def create_log():
     # Create log and file folder
-    target_name = 'Denim Overalls'.replace(' ','_')
+    target_name = 'Denim Overalls'.replace(' ','-')
     script_path = os.path.dirname(os.path.realpath(__file__))
     global log_path
     log_path = script_path + '\\' + target_name
@@ -15,13 +15,14 @@ def create_log():
         os.makedirs(log_path)
 
     # Start log
-    log_file_name = 'log_' + str(target_name) + '.txt'
-    log_file_path = log_path+'\\'+log_file_name
+    log_file_name = 'log_' + str(target_name) + '.csv'
+    global log_file_path
+    log_file_path = log_path + '\\' + log_file_name
     if not os.path.isfile(log_file_path):
         global log
         log = open(log_file_path,'w+')
+        log.write('Loop Count' + ',' + 'Timestamp' + ',' + 'Note\n')
         log.close
-    log = open(log_file_path,'a')
 
 def get_html():
     user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36'
@@ -80,8 +81,9 @@ def sleep_time():
 create_log()
 start_time = datetime.now()
 loop_count = 0
-log.write('Start Time: ' + str(start_time) + '\n')
-log.close
+log = open(log_file_path,'a')
+log.write(' ' + ',' + str(datetime.now()) + ',' + 'Start Time\n')
+log.flush()
 
 # Get current html state
 get_old_html()
@@ -93,13 +95,14 @@ while (size_list_change == True):
 
     if(str(old_html_target) == str(new_html_target)):
         print(str(loop_count) + '   ' + str(datetime.now()) + '  HTML Target Unchanged')
-        log.write(str(loop_count) + '   ' + str(datetime.now()) + '  HTML Target Unchanged\n')
+        log.write(str(loop_count) + ',' + str(datetime.now()) + ',' + 'HTML Target Unchanged\n')
+        log.flush()
         time.sleep(sleep_time())
     else:
         send_email('HTML Target Changed!!?', str(url) + ' Loop: ' + str(loop_count))
-        log.write(str(loop_count) + '   ' + str(datetime.now()) + '  HTML Target Changed\n')
+        log.write(str(loop_count) + ',' + str(datetime.now()) + ',' + 'HTML Target Changed\n')
         end_time = datetime.now()
-        log.write('End Time: ' + str(end_time) + '\n')
+        log.write(' ' + ',' + str(end_time) + ',' + 'End Time\n')
         log.close
         print(str(loop_count) + '   ' + str(datetime.now()) + '  HTML Target Changed')
         get_old_html() # Start again
