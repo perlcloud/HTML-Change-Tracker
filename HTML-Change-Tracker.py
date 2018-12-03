@@ -3,6 +3,7 @@ import time
 import random
 import urllib.request
 from datetime import  datetime
+from datetime import timedelta
 from bs4 import BeautifulSoup
 
 def create_log():
@@ -21,10 +22,11 @@ def create_log():
     if not os.path.isfile(log_file_path):
         global log
         log = open(log_file_path,'w+')
-        log.write('Loop Count' + ',' + 'Timestamp' + ',' + 'Note\n')
+        log.write('Loop Count' + ',' + 'Timestamp' + ',' + 'Download Time' + ',' + 'Note\n')
         log.close
 
 def get_html():
+    get_html_time_start = time.time()
     user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36'
     global url
     url = 'https://www.zara.com/us/en/lined-denim-overalls-p05854594.html'
@@ -32,7 +34,11 @@ def get_html():
     request=urllib.request.Request(url,None,headers)
     response = urllib.request.urlopen(request)
     global html_data
-    html_data = BeautifulSoup(response.read())
+    html_data = BeautifulSoup(response.read(), 'html.parser')
+    get_html_time_end = time.time()
+    global get_html_time
+    get_html_time = get_html_time_start - get_html_time_end
+    # get_html_time = timedelta(seconds=get_html_time).total_seconds()
 
 def get_old_html():
     get_html()
@@ -43,6 +49,7 @@ def get_old_html():
     html_state_file.write(str(html_data))
 
 def get_new_html():
+    
     get_html()
     global new_html_target
     new_html_target = str(html_data.find_all('div', class_='size-list'))
@@ -82,7 +89,7 @@ create_log()
 start_time = datetime.now()
 loop_count = 0
 log = open(log_file_path,'a')
-log.write(' ' + ',' + str(datetime.now()) + ',' + 'Start Time\n')
+log.write(' ' + ',' + str(datetime.now()) + ',' + ' ,' + 'Start Time\n')
 log.flush()
 
 # Get current html state
@@ -94,15 +101,15 @@ while (size_list_change == True):
     get_new_html()
 
     if(str(old_html_target) == str(new_html_target)):
-        print(str(loop_count) + '   ' + str(datetime.now()) + '  HTML Target Unchanged')
-        log.write(str(loop_count) + ',' + str(datetime.now()) + ',' + 'HTML Target Unchanged\n')
+        print(str(loop_count) + '   ' + str(datetime.now()) + '   ' + str(get_html_time) + '    ' + 'HTML Target Unchanged\n')
+        log.write(str(loop_count) + ',' + str(datetime.now()) + ',' + str(get_html_time) + ',' + 'HTML Target Unchanged\n')
         log.flush()
         time.sleep(sleep_time())
     else:
         send_email('HTML Target Changed!!?', str(url) + ' Loop: ' + str(loop_count))
-        log.write(str(loop_count) + ',' + str(datetime.now()) + ',' + 'HTML Target Changed\n')
+        log.write(str(loop_count) + ',' + str(datetime.now()) + ',' + str(get_html_time) + ',' + 'HTML Target Changed\n')
         end_time = datetime.now()
-        log.write(' ' + ',' + str(end_time) + ',' + 'End Time\n')
+        log.write(' ' + ',' + str(end_time) + ',' + ' ,' + 'End Time\n')
         log.close
         print(str(loop_count) + '   ' + str(datetime.now()) + '  HTML Target Changed')
         get_old_html() # Start again
