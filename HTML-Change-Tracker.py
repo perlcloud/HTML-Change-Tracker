@@ -104,7 +104,7 @@ def sleep_time():               # Randomize breaks between loops
     sleep_time = random.randint(120,300)
     for x in reversed(range(sleep_time)):  
         b = x + 1
-        print ('Sleep: ' + str(b) + '/' + str(sleep_time), end="\r")
+        print ('Sleep: ' + str(b) + '/' + str(sleep_time) + '    ', end="\r")
         time.sleep(1)
 
 # Start log
@@ -132,9 +132,9 @@ while True:
         sleep_time()
     else:
         send_email('HTML Target Changed!', str(url) + 'Run-' + str(run_count) + ' Loop-' + str(loop_count))
-        log.write(',' + str(loop_count) + ',' + str(datetime.now()) + ',' + ',' + ',' + '1,' + str(get_html_time) + ',' + '\n')
+        log.write(',' + str(loop_count) + ',' + str(datetime.now()) + ',' + ',' + ',' + '1,' + str(get_html_time) + ',' + '\n') # Note HTML change
         end_time = datetime.now()
-        log.write(str(run_count) + ',' + ',' + str(datetime.now()) + ',' + '1,' + ',' + ',' + '\n')
+        log.write(str(run_count) + ',' + ',' + str(datetime.now()) + ',' + '1,' + ',' + ',' + '\n') # Note end of run
         log.close
         print(str(run_count) + '   ' + str(loop_count) + '  ' + str(datetime.now()) + '   ' + str(get_html_time) + '    ' + 'There was a Change!')
         run_count = run_count + 1
