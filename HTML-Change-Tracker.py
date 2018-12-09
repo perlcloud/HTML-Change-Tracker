@@ -35,7 +35,7 @@ def create_log():               # Creates and starts log file
     if not os.path.isfile(log_file_path):
         global log
         log = open(log_file_path,'w+')
-        log.write('Loop Count,Timestamp,Download Time,Note\n') # csv headers
+        log.write('Run Count,Loop Count,Timestamp,Start,End,Change,Download Time,Note\n') # csv headers
         log.close
 
 def get_html():                 # Downloads target html
@@ -100,14 +100,17 @@ def send_email(subject, body):  # Send notification via gmail account
         print('Email Notification Failed')
 
 def sleep_time():               # Randomize breaks between loops
-    return random.randint(60,181)
+    sleep_time = random.randint(60,381)
+    print('Waiting ' + str(sleep_time) + ' seconds...')
+    return sleep_time
 
 # Start log
 create_log()
 loop_count = 0
+run_count = 1
 start_time = datetime.now()
 log = open(log_file_path,'a')
-log.write(' ' + ',' + str(datetime.now()) + ',' + ' ,' + 'Start Time\n')
+log.write(str(run_count) + ',' + ',' + str(datetime.now()) + ',1' + ',' + ',' + ',' + '\n')
 log.flush()
 
 # Get current html state
@@ -119,17 +122,17 @@ while True:
     get_new_html()
 
     if(old_html == new_html):
-        print(str(loop_count) + '   ' + str(datetime.now()) + '   ' + str(get_html_time) + '    ' + 'HTML Target Unchanged')
-        log.write(str(loop_count) + ',' + str(datetime.now()) + ',' + str(get_html_time) + ',' + 'HTML Target Unchanged\n')
+        print(str(run_count) + '   ' + str(loop_count) + '  ' + str(datetime.now()) + '   ' + str(get_html_time) + '    ' + 'No Change')
+        log.write(',' + str(loop_count) + ',' + str(datetime.now()) + ',' + ',' + ',' + '0,' + str(get_html_time) + ',' + '\n')
         log.flush()
         time.sleep(sleep_time())
     else:
         send_email('HTML Target Changed!!?', str(url) + ' Loop: ' + str(loop_count))
-        log.write(str(loop_count) + ',' + str(datetime.now()) + ',' + str(get_html_time) + ',' + 'HTML Target Changed\n')
+        log.write(',' + str(loop_count) + ',' + str(datetime.now()) + ',' + ',' + ',' + '1,' + str(get_html_time) + ',' + '\n')
         end_time = datetime.now()
-        log.write(' ' + ',' + str(end_time) + ',' + ' ,' + 'End Time\n')
+        log.write(str(run_count) + ',' + ',' + str(datetime.now()) + ',' + '1,' + ',' + ',' + '\n')
         log.close
-        print(str(loop_count) + '   ' + str(datetime.now()) + '  HTML Target Changed')
+        print(str(run_count) + '   ' + str(loop_count) + '  ' + str(datetime.now()) + '   ' + str(get_html_time) + '    ' + 'There was a Change!')
+        run_count = run_count + 1
         get_old_html() # Start again
-        loop_count = 0
 
