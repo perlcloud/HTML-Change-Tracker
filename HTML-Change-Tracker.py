@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 import json
 import random
@@ -100,9 +101,11 @@ def send_email(subject, body):  # Send notification via gmail account
         print('Email Notification Failed')
 
 def sleep_time():               # Randomize breaks between loops
-    sleep_time = random.randint(60,381)
-    print('Waiting ' + str(sleep_time) + ' seconds...')
-    return sleep_time
+    sleep_time = random.randint(120,300)
+    for x in reversed(range(sleep_time)):  
+        b = x + 1
+        print ('Sleep: ' + str(b) + '/' + str(sleep_time), end="\r")
+        time.sleep(1)
 
 # Start log
 create_log()
@@ -125,9 +128,10 @@ while True:
         print(str(run_count) + '   ' + str(loop_count) + '  ' + str(datetime.now()) + '   ' + str(get_html_time) + '    ' + 'No Change')
         log.write(',' + str(loop_count) + ',' + str(datetime.now()) + ',' + ',' + ',' + '0,' + str(get_html_time) + ',' + '\n')
         log.flush()
-        time.sleep(sleep_time())
+        # time.sleep(sleep_time())
+        sleep_time()
     else:
-        send_email('HTML Target Changed!!?', str(url) + ' Loop: ' + str(loop_count))
+        send_email('HTML Target Changed!', str(url) + 'Run-' + str(run_count) + ' Loop-' + str(loop_count))
         log.write(',' + str(loop_count) + ',' + str(datetime.now()) + ',' + ',' + ',' + '1,' + str(get_html_time) + ',' + '\n')
         end_time = datetime.now()
         log.write(str(run_count) + ',' + ',' + str(datetime.now()) + ',' + '1,' + ',' + ',' + '\n')
