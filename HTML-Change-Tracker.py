@@ -52,11 +52,11 @@ def create_log():               # Creates and starts log file
     global log_file_path
     log_file_path = log_path + '\\' + log_file_name
     if not os.path.isfile(log_file_path):
-        global log
-        log = open(log_file_path, 'w+')
+        global log_file
+        log_file = open(log_file_path, 'w+')
         # csv headers
-        log.write('Run Count,Loop Count,Timestamp,Start,End,Change,Download Time,Note\n')
-        log.close
+        log_file.write('Run Count,Loop Count,Timestamp,Start,End,Change,Download Time,Note\n')
+        log_file.close
 
 
 def get_html():                 # Downloads target html
@@ -113,14 +113,14 @@ def send_email(subject, body):  # Send notification via gmail account
         server.login(user, pwd)
         server.sendmail(FROM, TO, message)
         server.close()
-        log = open(log_file_path, 'a')
-        log.write(str(run_count) + ',' + ',' + str(datetime.now()) + ',,,,,' + 'Email Notification Sent\n')
-        log.flush()
+        log_file = open(log_file_path, 'a')
+        log_file.write(str(run_count) + ',' + ',' + str(datetime.now()) + ',,,,,' + 'Email Notification Sent\n')
+        log_file.flush()
         print('Email Notification Sent')
     except:
-        log = open(log_file_path, 'a')
-        log.write(str(run_count) + ',' + ',' + str(datetime.now()) + ',,,,,' + 'Email Notification Failed\n')
-        log.flush()
+        log_file = open(log_file_path, 'a')
+        log_file.write(str(run_count) + ',' + ',' + str(datetime.now()) + ',,,,,' + 'Email Notification Failed\n')
+        log_file.flush()
         print('Email Notification Failed')
 
 
@@ -136,9 +136,9 @@ create_log()
 loop_count = 0  # Count of total downloads
 run_count = 1   # How many changes we have captured
 start_time = datetime.now()
-log = open(log_file_path, 'a')
-log.write(str(run_count) + ',' + ',' + str(datetime.now()) + ',1' + ',' + ',' + ',' + '\n')  # Log start time
-log.flush()
+log_file = open(log_file_path, 'a')
+log_file.write(str(run_count) + ',' + ',' + str(datetime.now()) + ',1' + ',' + ',' + ',' + '\n')  # Log start time
+log_file.flush()
 
 # Get current html state
 get_old_html()
@@ -149,16 +149,16 @@ while True:
 
     if(old_html == new_html):
         print(str(run_count) + '   ' + str(loop_count) + '  ' + str(datetime.now()) + '   ' + str(get_html_time) + '    ' + 'No Change')
-        log.write(',' + str(loop_count) + ',' + str(datetime.now()) + ',' + ',' + ',' + '0,' + str(get_html_time) + ',' + '\n')
-        log.flush()
+        log_file.write(',' + str(loop_count) + ',' + str(datetime.now()) + ',' + ',' + ',' + '0,' + str(get_html_time) + ',' + '\n')
+        log_file.flush()
         # time.sleep(sleep_time())
         sleep(120, 300)
     else:
-        send_email('HTML Target Changed!', str(url) + 'Run-' + str(run_count) + ' Loop-' + str(loop_count))
-        log.write(',' + str(loop_count) + ',' + str(datetime.now()) + ',' + ',' + ',' + '1,' + str(get_html_time) + ',' + '\n')  # Note HTML change
+        send_email('HTML Target Changed!', str(url) + ' Run-' + str(run_count) + ' Loop-' + str(loop_count))
+        log_file.write(',' + str(loop_count) + ',' + str(datetime.now()) + ',' + ',' + ',' + '1,' + str(get_html_time) + ',' + '\n')  # Note HTML change
         end_time = datetime.now()
-        log.write(str(run_count) + ',' + ',' + str(datetime.now()) + ',' + '1,' + ',' + ',' + '\n')  # Note end of run
-        log.close
+        log_file.write(str(run_count) + ',' + ',' + str(datetime.now()) + ',' + '1,' + ',' + ',' + '\n')  # Note end of run
+        log_file.close
         print(str(run_count) + '   ' + str(loop_count) + '  ' + str(datetime.now()) + '   ' + str(get_html_time) + '    ' + 'There was a Change!')
         run_count = run_count + 1
         get_old_html()  # Start again
