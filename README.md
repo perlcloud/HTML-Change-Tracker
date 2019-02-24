@@ -3,7 +3,7 @@
 This script was built to notify me and my wife of when a particular item of clothing came into stock on zara.com because
 they do not have a email notification system on their children's site.
 
-_***Note: Readme incomplete, but I'll be back, don't worry!***_
+**_Note: Readme incomplete, but I'll be back, don't worry!_**
 
 ## How it works
 Using headless chrome, the html of the url specified in the config file is retrieved. Using the `BeautifulSoup` module,
