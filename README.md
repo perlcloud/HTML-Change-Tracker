@@ -28,7 +28,7 @@ sender:
   pwd: password
 recipient:
   - email of recepient, one or more
-  - send via text by using your cariers gateway like: 1234567890@txt.att.net
+  - send via text by using your cariers gateway like - 1234567890@txt.att.net
 
 sleep:
   min: Minimum sleep time between checks
