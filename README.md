@@ -3,6 +3,8 @@
 This script was built to notify me and my wife of when a particular item of clothing came into stock on zara.com because
 they do not have a email notification system on their children's site.
 
+_***Note: Readme incomplete, but I'll be back, don't worry!***_
+
 ## How it works
 Using headless chrome, the html of the url specified in the config file is retrieved. Using the `BeautifulSoup` module,
 a portion of the html is extracted for comparison. At the beginning of each run and any time there is a change, the html
@@ -34,3 +36,6 @@ sleep:
   min: Minimum sleep time between checks
   max: max sleep time. Random choice between the 2 is chosen
 ```
+SMTP is used to log into your gmail account to send the notifications. in order to enable SMTP with gmail, you must
+[enable less secure apps](https://support.google.com/accounts/answer/6010255?hl=en) for your account.
+As this is less than ideal, consider setting up a new account just for notifications.
