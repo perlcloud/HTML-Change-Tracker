@@ -27,8 +27,8 @@ sender:
   user: gmail account to send notification
   pwd: password
 recipient:
-  - email of recepient, one or more
-  - send via text by using your cariers gateway like - 1234567890@txt.att.net
+  - email of recipient, one or more
+  - send via text by using your careers gateway like - 1234567890@txt.att.net
 
 sleep:
   min: Minimum sleep time between checks
