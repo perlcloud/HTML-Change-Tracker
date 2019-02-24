@@ -1,0 +1,13 @@
+---
+project_name: Sample Project
+url: https://www.zara.com/us/en/lined-denim-overalls-p05854594.html
+target:
+  name: div
+  class: size-list
+
+sender:
+  user: someuser@gmail.com
+  pwd: password
+recipient:
+  - someuser@gmail.com
+...

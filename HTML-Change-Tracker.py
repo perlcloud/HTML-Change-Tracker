@@ -1,107 +1,134 @@
 import os
 import re
-import sys
+import csv
+import yaml
 import time
-import json
+import pickle
 import random
 import smtplib
 import urllib.request
+
 from datetime import datetime
-from datetime import timedelta
 from bs4 import BeautifulSoup
 
-# Set Variables
+import getHTML
+
 script_path = os.path.dirname(os.path.realpath(__file__))
 
 try:
-    # Set Variables from json
-    with open(script_path + '\\Tracking-Var-Data.json') as json_data:
-        json_data = json.load(json_data)
+    # Set variables from YAML
+    with open(script_path + '\\config.yaml') as config:
+        conf = yaml.load(config)
 
-        project_name = json_data['project_details'][0]['name']
-        project_name = project_name.replace(' ', '-')
-        url = json_data['project_details'][0]['url']
+        project_name = conf['project_name'].replace(' ', '-')
+        url = conf['url']
+        target_name = conf['target']['name']
+        target_class = conf['target']['class']
+        user = conf['sender']['user']
+        pwd = conf['sender']['pwd']
+        recipient = conf['recipient']
+
         # Verify url format
-        if not re.match(r"^(?:http(s)?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&'\(\)\*\+,;=.]+$", url):
-            print('There is a problem with your url')
-        target_name = json_data['project_details'][0]['target'][0]['name']
-        target_class = json_data['project_details'][0]['target'][0]['class']
-        user = json_data['notify'][0]['sender'][0]['user']
+        re_email = (r"^(?:http(s)?:\/\/)?[\w.-]+(?:\.[\w\.-]+)"
+                    r"+[\w\-\._~:/?#[\]@!\$&'\(\)\*\+,;=.]+$")
+        if not re.match(re_email, url):
+            print('Regex match error: url\n', url)
+            raise Exception('Regex match error')
+
         # Verify email format
-        if not re.match(r"^([a-zA-Z0-9_\-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([a-zA-Z0-9\-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$", user):
-            print('There is a problem with your email username')
-        pwd = json_data['notify'][0]['sender'][0]['pass']
-        recipient = json_data['notify'][0]['recipient']
-        # Verify email format
+        re_email = (r"^([a-zA-Z0-9_\-\.]+)@((\[[0-9]{1,3}\.[0-9]"
+                    r"{1,3}\.[0-9]{1,3}\.)|(([a-zA-Z0-9\-]+\.)+)"
+                    r")([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$")
+        if not re.match(re_email, user):
+            print('Regex match error: user email\n', user)
+            raise Exception('Regex match error')
+
         for email in recipient:
-            if not re.match(r"^([a-zA-Z0-9_\-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([a-zA-Z0-9\-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$", email):
-                print('There is a problem with your recipient emails')
+            if not re.match(re_email, email):
+                print('Regex match error: user email\n', user)
 except:
-    print('There was a problem loading your JSON File.')
+    print('There was a problem loading your YAML File.')
+    raise
 
 
-def create_log():               # Creates and starts log file
-    # Create project folder
-    global log_path
-    log_path = script_path + '\\' + project_name
-    if not os.path.exists(log_path):
-        os.makedirs(log_path)
+log_path = os.path.join(script_path, project_name)
+log_file_name = 'log_' + project_name + '.csv'
+log_file_path = os.path.join(log_path, log_file_name)
+pickle_file = os.path.join(log_path, 'run_count.pickle')
 
-    # Create log file
-    log_file_name = 'log_' + str(project_name) + '.csv'
-    global log_file_path
-    log_file_path = log_path + '\\' + log_file_name
+
+def csv_write(event, loop_count='', download_time=''):
+    '''Writes data to log'''
+    data = [str(run_count),
+            str(loop_count),
+            str(datetime.now()),
+            event,
+            str(download_time)]
+
+    # Create .csv if one does not exist
     if not os.path.isfile(log_file_path):
-        global log_file
-        log_file = open(log_file_path, 'w+')
-        # csv headers
-        log_file.write('Run Count,Loop Count,Timestamp,Start,End,Change,Download Time,Note\n')
-        log_file.close
+        if not os.path.exists(log_path):
+            os.makedirs(log_path)
+
+        with open(log_file_path, 'w', newline='') as log:
+            file_writer = csv.writer(log, delimiter=',',
+                                     quotechar='"', quoting=csv.QUOTE_ALL)
+            file_writer.writerow(['Run Count',
+                                  'Loop Count',
+                                  'Timestamp',
+                                  'Event',
+                                  'Download Time'])
+
+    try:
+        with open(log_file_path, 'a', newline='') as log:
+            file_writer = csv.writer(log, delimiter=',',
+                                     quotechar='"', quoting=csv.QUOTE_ALL)
+            file_writer.writerow(data)
+    except PermissionError:
+        print('PermissionError: Log not written, please close the log file.')
+
+    # Clear the terminal of annoying
+    # headless chrome readout and print status
+    os.system('cls' if os.name == 'nt' else 'clear')
+    print(data)
 
 
-def get_html():                 # Downloads target html
-    # Download timer start
-    get_html_time_start = time.time()
+def get_html():
+    """Downloads target html"""
+    html_state, download_time = getHTML.get_html(url)
 
-    # Download HTML
-    user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36'
-    headers = {'User-Agent': user_agent, }
-    request = urllib.request.Request(url, None, headers)
-    response = urllib.request.urlopen(request)
-    global html_state
-    html_state = BeautifulSoup(response.read(), 'html.parser')
-    global html_target
     html_target = str(html_state.find_all(target_name, class_=target_class))
 
-    # Download timer end & calc
-    get_html_time_end = time.time()
-    global get_html_time
-    get_html_time = get_html_time_start - get_html_time_end
+    return html_state, html_target, download_time
 
 
-def get_old_html():             # Load original html state and back up
-    get_html()
+def get_old_html():
+    """Load original html state and back up"""
+    html_state, html_target, get_html_time = get_html()
 
     # Make backup of current html state
-    html_state_file_name = log_path + '\\' + 'html_state_' + str(datetime.now()).replace(':', '-') + '.html'
-    with open(html_state_file_name, 'w+') as html_state_file:
-        html_state_file.write(str(html_state))
+    now_str = str(datetime.now()).replace(':', '-')
+    html_state_filename = os.path.join(log_path,
+                                       'html_state_' +
+                                       now_str + '.html')
+    with open(html_state_filename, 'w+') as html_state_file:
+        html_state_file.write(str(html_state.encode("utf-8")))
 
-    global old_html
-    old_html = html_target
-
-
-def get_new_html():             # Load a current copy of the html target
-    get_html()
-    global new_html
-    new_html = html_target
+    return html_target
 
 
-def send_email(subject, body):  # Send notification via gmail account
+def get_new_html():
+    """Load a current copy of the html target"""
+    html_state, html_target, get_html_time = get_html()
+    return html_target, get_html_time
+
+
+def send_email():
+    """Send notification via gmail account"""
     FROM = user
     TO = recipient if isinstance(recipient, list) else [recipient]
-    SUBJECT = subject
-    TEXT = body
+    SUBJECT = 'Target Change: ' + project_name
+    TEXT = str(url) + '\nRun-' + str(run_count) + '\nLoop-' + str(loop_count)
 
     # Prepare actual message
     message = '''From: %s\nTo: %s\nSubject: %s\n\n%s
@@ -113,52 +140,52 @@ def send_email(subject, body):  # Send notification via gmail account
         server.login(user, pwd)
         server.sendmail(FROM, TO, message)
         server.close()
-        log_file = open(log_file_path, 'a')
-        log_file.write(str(run_count) + ',' + ',' + str(datetime.now()) + ',,,,,' + 'Email Notification Sent\n')
-        log_file.flush()
-        print('Email Notification Sent')
+        csv_write('email sent')
     except:
-        log_file = open(log_file_path, 'a')
-        log_file.write(str(run_count) + ',' + ',' + str(datetime.now()) + ',,,,,' + 'Email Notification Failed\n')
-        log_file.flush()
-        print('Email Notification Failed')
+        csv_write('email failed')
 
 
-def sleep(short, long):         # Randomize breaks between loops
+def sleep(short, long):
+    """Randomize breaks between loops"""
     sleep_time = random.randint(short, long)
     for x in reversed(range(sleep_time)):
         b = x + 1
-        print ('Sleep: ' + str(b) + '/' + str(sleep_time) + '    ', end="\r")
+        print('Sleep:', str(b) + '/' + str(sleep_time), '    ', end="\r")
         time.sleep(1)
 
-# Start log
-create_log()
+
+# How many changes we have captured
+try:
+    with open(pickle_file, 'rb') as p:
+        run_count = pickle.load(p)
+except:
+    run_count = 1
+
 loop_count = 0  # Count of total downloads
-run_count = 1   # How many changes we have captured
-start_time = datetime.now()
-log_file = open(log_file_path, 'a')
-log_file.write(str(run_count) + ',' + ',' + str(datetime.now()) + ',1' + ',' + ',' + ',' + '\n')  # Log start time
-log_file.flush()
+
+# Log start time
+csv_write('start')
 
 # Get current html state
-get_old_html()
+old_html = get_old_html()
 
 while True:
-    loop_count = loop_count + 1
-    get_new_html()
+    loop_count += 1
+    new_html, download_time = get_new_html()
 
-    if(old_html == new_html):
-        print(str(run_count) + '   ' + str(loop_count) + '  ' + str(datetime.now()) + '   ' + str(get_html_time) + '    ' + 'No Change')
-        log_file.write(',' + str(loop_count) + ',' + str(datetime.now()) + ',' + ',' + ',' + '0,' + str(get_html_time) + ',' + '\n')
-        log_file.flush()
-        # time.sleep(sleep_time())
-        sleep(120, 300)
+    if old_html == new_html:
+        csv_write('no change',
+                  loop_count=loop_count,
+                  download_time=download_time)
+        sleep(1, 5)
     else:
-        send_email('HTML Target Changed!', str(url) + ' Run-' + str(run_count) + ' Loop-' + str(loop_count))
-        log_file.write(',' + str(loop_count) + ',' + str(datetime.now()) + ',' + ',' + ',' + '1,' + str(get_html_time) + ',' + '\n')  # Note HTML change
-        end_time = datetime.now()
-        log_file.write(str(run_count) + ',' + ',' + str(datetime.now()) + ',' + '1,' + ',' + ',' + '\n')  # Note end of run
-        log_file.close
-        print(str(run_count) + '   ' + str(loop_count) + '  ' + str(datetime.now()) + '   ' + str(get_html_time) + '    ' + 'There was a Change!')
-        run_count = run_count + 1
-        get_old_html()  # Start again
+        send_email()
+        csv_write('change detected',
+                  loop_count=loop_count,
+                  download_time=download_time)
+
+        run_count += 1
+        with open(pickle_file, 'wb') as p:
+            pickle.dump(run_count, p)
+
+        old_html = get_old_html()  # Start again
