@@ -6,10 +6,8 @@ import time
 import pickle
 import random
 import smtplib
-import urllib.request
 
 from datetime import datetime
-from bs4 import BeautifulSoup
 
 import getHTML
 
@@ -27,6 +25,8 @@ try:
         user = conf['sender']['user']
         pwd = conf['sender']['pwd']
         recipient = conf['recipient']
+        sleep_min = conf['sleep']['min']
+        sleep_max = conf['sleep']['max']
 
         # Verify url format
         re_email = (r"^(?:http(s)?:\/\/)?[\w.-]+(?:\.[\w\.-]+)"
@@ -58,7 +58,7 @@ pickle_file = os.path.join(log_path, 'run_count.pickle')
 
 
 def csv_write(event, loop_count='', download_time=''):
-    '''Writes data to log'''
+    """Writes data to log"""
     data = [str(run_count),
             str(loop_count),
             str(datetime.now()),
@@ -98,6 +98,7 @@ def get_html():
     html_state, download_time = getHTML.get_html(url)
 
     html_target = str(html_state.find_all(target_name, class_=target_class))
+    print(html_target)
 
     return html_state, html_target, download_time
 
@@ -177,7 +178,7 @@ while True:
         csv_write('no change',
                   loop_count=loop_count,
                   download_time=download_time)
-        sleep(1, 5)
+        sleep(sleep_min, sleep_max)
     else:
         send_email()
         csv_write('change detected',

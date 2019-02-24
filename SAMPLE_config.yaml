@@ -10,4 +10,8 @@ sender:
   pwd: password
 recipient:
   - someuser@gmail.com
+
+sleep:
+  min: 120
+  max: 500
 ...
