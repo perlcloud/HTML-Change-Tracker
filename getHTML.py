@@ -15,7 +15,7 @@ def get_html(url):
 
     # create a new Chrome session
     chrome_options = Options()
-    chrome_options.add_argument("--headless")
+    # chrome_options.add_argument("--headless")
 
     driver = webdriver.Chrome(chrome_options=chrome_options)
     driver.implicitly_wait(30)

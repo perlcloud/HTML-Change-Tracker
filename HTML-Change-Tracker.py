@@ -59,6 +59,7 @@ def log(event, loop_count="", download_time=""):
     # headless chrome readout and print status
     os.system("cls" if os.name == "nt" else "clear")
     print(
+        f"Job Name:      {project_name}\n",
         f"Run:           {run_count}\n",
         f"Loop number:   {loop_count}\n",
         f"Time:          {log_data[2]}\n",
@@ -194,6 +195,7 @@ try:
 except Exception as e:
     print("There was a problem loading your YAML File.")
     raise
+
 log_path = os.path.join(script_path, project_name)
 log_file_name = f"log_{project_name}.csv"
 log_file_path = os.path.join(log_path, log_file_name)
