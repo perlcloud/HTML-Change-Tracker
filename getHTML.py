@@ -22,9 +22,10 @@ def get_html(url):
     driver.get(url)
 
     # Selenium hands the page source to Beautiful Soup
-    html = BeautifulSoup(driver.page_source, 'html.parser')
+    html = BeautifulSoup(driver.page_source, "html.parser")
     driver.quit()
 
     end = time.time()
-    get_html_time = start - end
+    get_html_time = round(end - start, 2)
+
     return html, get_html_time
